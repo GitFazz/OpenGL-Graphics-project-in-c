@@ -16,7 +16,7 @@ double angle;
 struct point
 {
 	double x,y,z;
-};
+}p1;
 
 
 void drawAxes()
@@ -65,13 +65,33 @@ void drawGrid()
 void drawSquare(double a)
 {
     //glColor3f(1.0,0.0,0.0);
-	glBegin(GL_QUADS);{
-		glVertex3f( a, a,2);
-		glVertex3f( a,-a,2);
-		glVertex3f(-a,-a,2);
-		glVertex3f(-a, a,2);
-	}glEnd();
+
+		//glVertex2i( a, a);
+		//glVertex2i( a,-a);
+		//glVertex2i(-a,-a);
+		//glVertex2i(-a, a);
+    glBegin(GL_LINES);
+        glVertex2f(a,a);
+        glVertex2f(a,-a);
+    glEnd();
+
+    glBegin(GL_LINES);
+        glVertex2f(a,-a);
+        glVertex2f(-a,-a);
+    glEnd();
+
+    glBegin(GL_LINES);
+        glVertex2f(-a,-a);
+        glVertex2f(-a,a);
+    glEnd();
+
+    glBegin(GL_LINES);
+        glVertex2f(-a,a);
+        glVertex2f(a,a);
+    glEnd();
+
 }
+
 
 
 void drawCircle(double radius,int segments)
@@ -302,19 +322,20 @@ void display(){
 	****************************/
 	//add objects
 
-	drawAxes();
+	//drawAxes();
 	drawGrid();
 
     //glColor3f(1,0,0);
     //drawSquare(10);
 
-    drawSS();
+    //drawSS();
 
-    drawCircle(30,24);
 
-    drawCone(20,50,24);
+    drawCircle(100,50);
+    drawSquare(120);
+    //drawCone(20,50,24);
 
-	drawSphere(30,24,20);
+	//drawSphere(30,24,20);
 
 
 
@@ -327,6 +348,9 @@ void display(){
 void animate(){
 	angle+=01;
 	//codes for any changes in Models, Camera
+	p1.x  = rand()%10;
+	p1.y = rand()%10;
+
 	glutPostRedisplay();
 }
 
@@ -356,6 +380,9 @@ void init(){
 	//aspect ratio that determines the field of view in the X direction (horizontally)
 	//near distance
 	//far distance
+
+	p1.x = -1;
+	p1.y = -1;
 }
 
 int main(int argc, char **argv){
@@ -365,6 +392,10 @@ int main(int argc, char **argv){
 	glutInitDisplayMode(GLUT_DEPTH | GLUT_DOUBLE | GLUT_RGB);	//Depth, Double buffer, RGB color
 
 	glutCreateWindow("My OpenGL Program");
+
+	////////// for circle //////////
+
+	point p1;
 
 	init();
 
