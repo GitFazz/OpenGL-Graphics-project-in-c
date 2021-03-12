@@ -6,17 +6,112 @@
 #include <glut.h>
 
 #define pi (2*acos(0.0))
+#define no_of_circle 5
+#define circle_red 50
+#define square_side 120
 
 double cameraHeight;
 double cameraAngle;
 int drawgrid;
 int drawaxes;
-double angle;
+double angle,step=1.002;
+bool inCircle[no_of_circle],isPaused;
+double speed,prev_speed;
 
 struct point
 {
 	double x,y,z;
-}p1;
+	point(double xx,double yy) {
+        x = xx; y = yy;
+	}
+	point() {
+	    x = 0; y = 0; z = 0;
+	}
+}p[no_of_circle];
+
+struct vect
+{
+    double x,y,z;
+
+    vect(double xx,double yy) {
+        x = xx; y = yy;
+    }
+
+    vect() {
+        x = 0; y = 0; z = 0;
+    }
+
+}v[no_of_circle];
+
+point add_vect_point(struct point p,struct vect v)
+{
+    p.x = p.x + v.x;
+    p.y = p.y + v.y;
+    p.z = p.z + v.z;
+
+    return p;
+}
+
+vect rotate_vect(vect v,double a) {
+    vect r;
+
+    r.x = cos(a)*v.x - sin(a)*v.y;
+    r.y = sin(a)*v.x + cos(a)*v.y;
+
+    return r;
+}
+
+vect add_vect_vect(struct vect one,struct vect two) {
+    one.x += two.x;
+    one.y += two.y;
+
+    return one;
+}
+
+void print_vect(struct vect v) {
+    printf("( %lf , %lf ) \n",v.x,v.y);
+}
+
+vect vect_from_two_point(struct point a,struct point b) {
+    vect r;
+    r.x = b.x-a.x;
+    r.y = b.y-a.y;
+}
+
+vect neg_vect(struct vect v) {
+
+    return vect(-v.x,-v.y);
+}
+
+vect perpendiculer_vect( vect v) {
+    return vect(v.y,-v.x);
+}
+
+double dist_two_point(struct point a,struct point b) {
+    return sqrt( (a.x-b.x)*(a.x-b.x) + (a.y-b.y)*(a.y-b.y) );
+}
+
+double dot_product (struct vect a,struct vect b) {
+    return (a.x*b.x+a.y*b.y);
+}
+
+double dist_from_origin(struct point a) {
+    return sqrt(a.x*a.x+a.y*a.y);
+}
+
+double value_of_vect(struct vect a) {
+    return sqrt(a.x*a.x+a.y*a.y);
+}
+
+vect projection_over_another_vect(struct vect a,struct vect b) {
+
+   double val =  dot_product(a,b)/(a.x*a.x+a.y*a.y);
+
+   return vect(a.x*val,a.y*val);
+}
+
+
+
 
 
 void drawAxes()
@@ -116,6 +211,8 @@ void drawCircle(double radius,int segments)
         }
         glEnd();
     }
+
+
 }
 
 void drawCone(double radius,double height,int segments)
@@ -187,6 +284,12 @@ void drawSphere(double radius,int slices,int stacks)
 	}
 }
 
+void set_speed(double speed) {
+    for(int i=0;i<no_of_circle;i++) {
+        v[i].x = v[i].x * speed;
+        v[i].y = v[i].y * speed;
+    }
+}
 
 void drawSS()
 {
@@ -219,8 +322,10 @@ void drawSS()
 void keyboardListener(unsigned char key, int x,int y){
 	switch(key){
 
-		case '1':
-			drawgrid=1-drawgrid;
+		case 'p':
+
+            isPaused = !isPaused;
+
 			break;
 
 		default:
@@ -232,10 +337,12 @@ void keyboardListener(unsigned char key, int x,int y){
 void specialKeyListener(int key, int x,int y){
 	switch(key){
 		case GLUT_KEY_DOWN:		//down arrow key
-			cameraHeight -= 3.0;
+			speed = 0.75;
+			set_speed(speed);
 			break;
 		case GLUT_KEY_UP:		// up arrow key
-			cameraHeight += 3.0;
+			speed = 1.25;
+			set_speed(speed);
 			break;
 
 		case GLUT_KEY_RIGHT:
@@ -287,6 +394,22 @@ void mouseListener(int button, int state, int x, int y){	//x, y is the x-y of th
 
 
 
+void movingCircle(int N) {
+
+    for(int i=0;i<N;i++)
+    {
+       glPushMatrix();
+        {
+           glTranslatef(p[i].x,p[i].y,0);
+           drawCircle(10,30);
+        }
+       glPopMatrix();
+    }
+
+}
+
+
+
 void display(){
 
 	//clear the display
@@ -299,7 +422,6 @@ void display(){
 	********************/
 	//load the correct matrix -- MODEL-VIEW matrix
 	glMatrixMode(GL_MODELVIEW);
-
 	//initialize the matrix
 	glLoadIdentity();
 
@@ -324,15 +446,15 @@ void display(){
 
 	//drawAxes();
 	drawGrid();
-
+    //drawSS();
     //glColor3f(1,0,0);
     //drawSquare(10);
 
-    //drawSS();
 
+    movingCircle(no_of_circle);
 
-    drawCircle(100,50);
-    drawSquare(120);
+    drawSquare(square_side);
+    drawCircle(circle_red,50);
     //drawCone(20,50,24);
 
 	//drawSphere(30,24,20);
@@ -344,12 +466,94 @@ void display(){
 	glutSwapBuffers();
 }
 
+void check_collision_with_side_bar(int i) {
+
+    if(square_side-abs(p[i].x)<=10) {
+        v[i].x = -v[i].x;
+    }
+
+    if(square_side-abs(p[i].y)<=10) {
+        v[i].y = -v[i].y;
+    }
+
+}
+
+void check_collision_with_circle(int i) {
+
+     if( (circle_red-dist_from_origin(p[i]))<=10 ) {
+
+
+        vect v_radious(p[i].x,p[i].y) ;
+
+        if(dot_product(v_radious,v[i])<0) return;
+
+        vect v_perp_radious = vect(p[i].y,-p[i].x);
+        vect v_normal = projection_over_another_vect(v_radious,v[i]);
+        vect v_tangent = projection_over_another_vect(v_perp_radious,v[i]);
+        v[i] = add_vect_vect(  neg_vect(v_normal), v_tangent  );
+
+
+     }
+
+}
+
+void check_collision_between_bubble(int i) {
+    for(int ii=0;ii<no_of_circle;ii++) {
+        if(ii!=i && dist_two_point(p[i],p[ii])<=20 && inCircle[i] && inCircle[ii]) {
+
+
+            vect v_lr = vect_from_two_point(p[i],p[ii]);
+            vect v_lr_perp = perpendiculer_vect(v_lr);
+            vect v_l_ver = projection_over_another_vect(v_lr_perp,v[i]);
+            vect v_l_hor = projection_over_another_vect(v_lr,v[i]);
+
+
+            vect v_rl = vect_from_two_point(p[ii],p[i]);
+            vect v_rl_perp = perpendiculer_vect(v_rl);
+            vect v_r_ver = projection_over_another_vect(v_rl_perp,v[ii]);
+            vect v_r_hor = projection_over_another_vect(v_rl,v[ii]);
+
+            v[i] = add_vect_vect( neg_vect(v_l_hor),v_l_ver );
+            v[ii] = add_vect_vect( neg_vect(v_r_hor),v_r_ver );
+
+
+        }
+    }
+}
+
+void check_in_circle(int i) {
+
+    if( dist_from_origin(p[i]) <= (circle_red-10) )
+        inCircle[i] = true;
+
+}
+
+
+
 
 void animate(){
-	angle+=01;
-	//codes for any changes in Models, Camera
-	p1.x  = rand()%10;
-	p1.y = rand()%10;
+	angle+=0.01;
+
+
+    for(int i=0;i<no_of_circle;i++) {
+
+        if(!inCircle[i]) {
+            check_in_circle(i);
+            check_collision_with_side_bar(i);
+        }
+
+        else {
+
+            check_collision_with_circle(i);
+            check_collision_between_bubble(i);
+
+        }
+
+        if(!isPaused) {
+            p[i] = add_vect_point(p[i],v[i]);
+        }
+
+    }
 
 	glutPostRedisplay();
 }
@@ -361,6 +565,8 @@ void init(){
 	cameraHeight=150.0;
 	cameraAngle=1.0;
 	angle=0;
+	speed = 1;
+	isPaused = false;
 
 	//clear the screen
 	glClearColor(0,0,0,0);
@@ -381,8 +587,21 @@ void init(){
 	//near distance
 	//far distance
 
-	p1.x = -1;
-	p1.y = -1;
+	vect init_v(0.009,0.006);
+
+    for(int i=0;i<no_of_circle;i++) {
+
+        p[i].x = -(square_side-10.001);
+        p[i].y = -(square_side-10.001);
+
+        v[i] = rotate_vect(init_v,i*10);
+
+        inCircle[i] = false;
+    }
+
+
+
+
 }
 
 int main(int argc, char **argv){
@@ -395,8 +614,6 @@ int main(int argc, char **argv){
 
 	////////// for circle //////////
 
-	point p1;
-
 	init();
 
 	glEnable(GL_DEPTH_TEST);	//enable Depth Testing
@@ -408,6 +625,11 @@ int main(int argc, char **argv){
 	glutSpecialFunc(specialKeyListener);
 	glutMouseFunc(mouseListener);
 
+	////////////// test ////////////
+
+
+
+    ///////////////////////////////
 	glutMainLoop();		//The main loop of OpenGL
 
 	return 0;
