@@ -7,7 +7,7 @@
 
 #define pi (2*acos(0.0))
 #define no_of_circle 5
-#define circle_red 50
+#define circle_red 75
 #define square_side 120
 
 double cameraHeight;
@@ -62,11 +62,10 @@ vect rotate_vect(vect v,double a) {
 }
 
 vect add_vect_vect(struct vect one,struct vect two) {
-    one.x += two.x;
-    one.y += two.y;
 
-    return one;
+    return vect( one.x+two.x, one.y+two.y);
 }
+
 
 void print_vect(struct vect v) {
     printf("( %lf , %lf ) \n",v.x,v.y);
@@ -76,6 +75,8 @@ vect vect_from_two_point(struct point a,struct point b) {
     vect r;
     r.x = b.x-a.x;
     r.y = b.y-a.y;
+
+	return r;
 }
 
 vect neg_vect(struct vect v) {
@@ -113,26 +114,6 @@ vect projection_over_another_vect(struct vect a,struct vect b) {
 
 
 
-
-void drawAxes()
-{
-	if(drawaxes==1)
-	{
-		glColor3f(1.0, 1.0, 1.0);
-		glBegin(GL_LINES);{
-			glVertex3f( 100,0,0);
-			glVertex3f(-100,0,0);
-
-			glVertex3f(0,-100,0);
-			glVertex3f(0, 100,0);
-
-			glVertex3f(0,0, 100);
-			glVertex3f(0,0,-100);
-		}glEnd();
-	}
-}
-
-
 void drawGrid()
 {
 	int i;
@@ -159,7 +140,7 @@ void drawGrid()
 
 void drawSquare(double a)
 {
-    //glColor3f(1.0,0.0,0.0);
+    glColor3f(0,1,0);
 
 		//glVertex2i( a, a);
 		//glVertex2i( a,-a);
@@ -194,7 +175,7 @@ void drawCircle(double radius,int segments)
     // a comment added
     int i;
     struct point points[100];
-    glColor3f(0.7,0.7,0.7);
+    glColor3f(1,0,0);
     //generate points
     for(i=0;i<=segments;i++)
     {
@@ -215,74 +196,8 @@ void drawCircle(double radius,int segments)
 
 }
 
-void drawCone(double radius,double height,int segments)
-{
-    int i;
-    double shade;
-    struct point points[100];
-    //generate points
-    for(i=0;i<=segments;i++)
-    {
-        points[i].x=radius*cos(((double)i/(double)segments)*2*pi);
-        points[i].y=radius*sin(((double)i/(double)segments)*2*pi);
-    }
-    //draw triangles using generated points
-    for(i=0;i<segments;i++)
-    {
-        //create shading effect
-        if(i<segments/2)shade=2*(double)i/(double)segments;
-        else shade=2*(1.0-(double)i/(double)segments);
-        glColor3f(shade,shade,shade);
-
-        glBegin(GL_TRIANGLES);
-        {
-            glVertex3f(0,0,height);
-			glVertex3f(points[i].x,points[i].y,0);
-			glVertex3f(points[i+1].x,points[i+1].y,0);
-        }
-        glEnd();
-    }
-}
 
 
-void drawSphere(double radius,int slices,int stacks)
-{
-	struct point points[100][100];
-	int i,j;
-	double h,r;
-	//generate points
-	for(i=0;i<=stacks;i++)
-	{
-		h=radius*sin(((double)i/(double)stacks)*(pi/2));
-		r=radius*cos(((double)i/(double)stacks)*(pi/2));
-		for(j=0;j<=slices;j++)
-		{
-			points[i][j].x=r*cos(((double)j/(double)slices)*2*pi);
-			points[i][j].y=r*sin(((double)j/(double)slices)*2*pi);
-			points[i][j].z=h;
-		}
-	}
-	//draw quads using generated points
-	for(i=0;i<stacks;i++)
-	{
-        glColor3f((double)i/(double)stacks,(double)i/(double)stacks,(double)i/(double)stacks);
-		for(j=0;j<slices;j++)
-		{
-			glBegin(GL_QUADS);{
-			    //upper hemisphere
-				glVertex3f(points[i][j].x,points[i][j].y,points[i][j].z);
-				glVertex3f(points[i][j+1].x,points[i][j+1].y,points[i][j+1].z);
-				glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,points[i+1][j+1].z);
-				glVertex3f(points[i+1][j].x,points[i+1][j].y,points[i+1][j].z);
-                //lower hemisphere
-                glVertex3f(points[i][j].x,points[i][j].y,-points[i][j].z);
-				glVertex3f(points[i][j+1].x,points[i][j+1].y,-points[i][j+1].z);
-				glVertex3f(points[i+1][j+1].x,points[i+1][j+1].y,-points[i+1][j+1].z);
-				glVertex3f(points[i+1][j].x,points[i+1][j].y,-points[i+1][j].z);
-			}glEnd();
-		}
-	}
-}
 
 void set_speed(double speed) {
     for(int i=0;i<no_of_circle;i++) {
@@ -291,33 +206,7 @@ void set_speed(double speed) {
     }
 }
 
-void drawSS()
-{
-    glColor3f(1,0,0);
-    drawSquare(20);
 
-    glRotatef(angle,0,0,1);
-    glTranslatef(110,0,0);
-    glRotatef(2*angle,0,0,1);
-    glColor3f(0,1,0);
-    drawSquare(15);
-
-    glPushMatrix();
-    {
-        glRotatef(angle,0,0,1);
-        glTranslatef(60,0,0);
-        glRotatef(2*angle,0,0,1);
-        glColor3f(0,0,1);
-        drawSquare(10);
-    }
-    glPopMatrix();
-
-    glRotatef(3*angle,0,0,1);
-    glTranslatef(40,0,0);
-    glRotatef(4*angle,0,0,1);
-    glColor3f(1,1,0);
-    drawSquare(5);
-}
 
 void keyboardListener(unsigned char key, int x,int y){
 	switch(key){
@@ -451,10 +340,12 @@ void display(){
     //drawSquare(10);
 
 
-    movingCircle(no_of_circle);
+
 
     drawSquare(square_side);
     drawCircle(circle_red,50);
+
+    movingCircle(no_of_circle);
     //drawCone(20,50,24);
 
 	//drawSphere(30,24,20);
@@ -499,7 +390,7 @@ void check_collision_with_circle(int i) {
 
 void check_collision_between_bubble(int i) {
     for(int ii=0;ii<no_of_circle;ii++) {
-        if(ii!=i && dist_two_point(p[i],p[ii])<=20 && inCircle[i] && inCircle[ii]) {
+        if(ii!=i && dist_two_point(p[i],p[ii])<=20) {
 
 
             vect v_lr = vect_from_two_point(p[i],p[ii]);
@@ -513,8 +404,8 @@ void check_collision_between_bubble(int i) {
             vect v_r_ver = projection_over_another_vect(v_rl_perp,v[ii]);
             vect v_r_hor = projection_over_another_vect(v_rl,v[ii]);
 
-            v[i] = add_vect_vect( neg_vect(v_l_hor),v_l_ver );
-            v[ii] = add_vect_vect( neg_vect(v_r_hor),v_r_ver );
+            v[i] = add_vect_vect( v_r_hor,v_l_ver );
+            v[ii] = add_vect_vect( v_l_hor,v_r_ver );
 
 
         }
@@ -533,6 +424,7 @@ void check_in_circle(int i) {
 
 void animate(){
 	angle+=0.01;
+
 
 
     for(int i=0;i<no_of_circle;i++) {
@@ -554,6 +446,8 @@ void animate(){
         }
 
     }
+
+
 
 	glutPostRedisplay();
 }
